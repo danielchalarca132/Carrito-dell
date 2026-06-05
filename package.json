@@ -1,0 +1,25 @@
+{
+  "name": "carritodell",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danielchalarca132/Carrito-dell.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/danielchalarca132/Carrito-dell/issues"
+  },
+  "homepage": "https://github.com/danielchalarca132/Carrito-dell#readme",
+  "dependencies": {
+    "colors": "^1.4.0"
+  }
+}
