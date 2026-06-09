@@ -63,6 +63,17 @@ h1 { font-size: 2rem; margin-bottom: 8px; }
 
 .panel { padding: 18px; }
 
+.tag {
+  display: inline-block;
+  margin-bottom: 8px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.12);
+  color: #7dd3fc;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 6px 10px;
+}
+
 .panel-header {
   display: flex;
   justify-content: space-between;
@@ -103,7 +114,13 @@ h1 { font-size: 2rem; margin-bottom: 8px; }
 
 .add-btn:hover { filter: brightness(1.05); }
 
-.cart-panel { display: flex; flex-direction: column; }
+.cart-panel {
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 16px;
+  align-self: start;
+}
 
 .cart-items {
   display: flex;

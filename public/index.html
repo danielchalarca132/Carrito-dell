@@ -3,57 +3,63 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Carrito de Compras</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <title>Carrito Dell</title>
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="page-shell">
-      <header class="hero-card">
+      <section class="hero-card">
         <div>
-          <p class="eyebrow">Tienda</p>
-          <h1>Carrito de compras</h1>
-          <p class="lead">Explora productos, agrega artículos y revisa tu total en tiempo real.</p>
+          <p class="eyebrow">Tienda en línea</p>
+          <h1>Carrito Dell</h1>
+          <p class="lead">Explora los productos del inventario y gestiona tu compra desde un diseño moderno con el carrito conectado al backend.</p>
         </div>
-        <div class="badge">Demo frontend</div>
-      </header>
+        <span class="badge" id="countLabel">Cargando productos...</span>
+      </section>
+
+      <section style="margin-bottom: 24px; max-width: 500px;">
+        <input type="text" id="inputBuscar" placeholder="🔍 Filtrar por nombre, categoría o precio..." 
+               style="width:100%; padding:14px; border-radius:14px; border:1px solid rgba(148,163,184,0.16); background:#111827; color:#e5eefb; outline:none;">
+      </section>
 
       <section class="content-grid">
         <article class="panel">
           <div class="panel-header">
-            <h2>Productos</h2>
-            <span id="countLabel">0 productos</span>
+            <div>
+              <p class="eyebrow">Productos</p>
+              <h2>Catálogo</h2>
+            </div>
+            <span class="badge">En stock</span>
           </div>
-          <div id="productGrid" class="product-grid"></div>
+          <div class="product-grid" id="productGrid"></div>
         </article>
 
         <aside class="panel cart-panel">
           <div class="panel-header">
-            <h2>Tu carrito</h2>
-            <span id="cartCount">0 artículos</span>
+            <div>
+              <p class="eyebrow">Tu compra</p>
+              <h2>Carrito</h2>
+            </div>
+            <span class="badge" id="cartCount">0 artículos</span>
           </div>
 
-          <div id="cartItems" class="cart-items"></div>
+          <div class="cart-items" id="cartItems"></div>
 
           <div class="summary-box">
             <div class="summary-row">
               <span>Subtotal</span>
               <strong id="subtotalValue">$0</strong>
             </div>
-            <div class="summary-row">
-              <span>Envío</span>
-              <strong>Gratis</strong>
-            </div>
             <div class="summary-row total-row">
               <span>Total</span>
               <strong id="totalValue">$0</strong>
             </div>
+            <button class="checkout-btn" id="checkoutBtn" disabled>Finalizar compra</button>
           </div>
-
-          <button id="checkoutBtn" class="checkout-btn" disabled>Finalizar compra</button>
         </aside>
       </section>
     </main>
 
-    <script type="module" src="/app.js"></script>
+    <script type="module" src="./app.js"></script>
   </body>
 </html>
