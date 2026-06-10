@@ -1,16 +1,9 @@
-// ==========================================
-// 1. VARIABLES DE ESTADO LOCAL DEL FRONTEND
-// ==========================================
-let productosDelServidor = []; // Aquí se guardará el JSON que responde tu backend
-const carritoLocal = [];       // Array donde se acumulan las compras del usuario
+let productosDelServidor = [];
 
-// 💡 REQUISITO EXIGIDO POR EL MENTOR: Estructura MAP nativa de JavaScript
-// Como tu backend no maneja un Map, lo declaramos aquí en el Front para que lo sustentes
 const metadataCategorias = new Map();
-metadataCategorias.set("Ropa", { ubicacionBodega: "Pasillo Central - Estante A" });
-metadataCategorias.set("Calzado", { ubicacionBodega: "Pasillo Lateral - Estante D" });
+metadataCategorias.set("Ropa", { ubicacionBodega: "Pasillo Central" });
+metadataCategorias.set("Calzado", { ubicacionBodega: "Pasillo Lateral" });
 
-// Captura de los elementos de tu diseño HTML (DOM)
 const productGrid = document.getElementById('productGrid');
 const cartItems = document.getElementById('cartItems');
 const countLabel = document.getElementById('countLabel');
@@ -20,93 +13,36 @@ const totalValue = document.getElementById('totalValue');
 const checkoutBtn = document.getElementById('checkoutBtn');
 const inputBuscar = document.getElementById('inputBuscar');
 
-// Formateador de dinero para Pesos Colombianos (COP)
 function formatCurrency(value) {
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    maximumFractionDigits: 0
-  }).format(value);
+  return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
 }
 
-// ==========================================
-// 2. FUNCIONES DE RENDERIZADO VISUAL
-// ==========================================
-
-// FUNCIÓN: Pintar los productos que llegaron de tu backend en la pantalla
+// Pintar productos en pantalla
 function renderProducts(productsList) {
   productGrid.innerHTML = '';
-
   productsList.forEach((product) => {
     const tieneStock = product.stock > 0;
     const card = document.createElement('article');
     card.className = 'product-card';
     card.style.opacity = !tieneStock ? '0.4' : '1';
-    
     card.innerHTML = `
       <span class="tag">${product.categoria}</span>
       <h3>${product.nombre}</h3>
       <p class="product-meta">Stock disponible: ${product.stock} uds</p>
       <p class="product-price">${formatCurrency(product.precio)}</p>
-      <button class="add-btn" data-id="${product.id}" ${!tieneStock ? 'disabled style="background:#444;cursor:not-allowed;"' : ''}>
+      <button class="add-btn" data-id="${product.id}" ${!tieneStock ? 'disabled style="background:#444;"' : ''}>
         ${tieneStock ? 'Agregar al carrito' : 'Agotado'}
       </button>
     `;
-
     productGrid.appendChild(card);
   });
 }
 
-// REQUISITO MENTOR: Filtrar productos en el Front usando .filter(), .includes() y .toString()
-function filtrarProductos(criterio) {
-  const busqueda = criterio.toLowerCase();
-  return productosDelServidor.filter(p =>
-    p.nombre.toLowerCase().includes(busqueda) ||
-    p.categoria.toLowerCase().includes(busqueda) ||
-    p.precio.toString().includes(busqueda)
-  );
-}
-
-// REQUISITO MENTOR: Agregar al carrito con validación y manejo de errores mediante TRY/CATCH
-function addToCart(productId) {
-  try {
-    const product = productosDelServidor.find((item) => item.id === Number(productId));
-
-    if (!product) throw new Error("El producto seleccionado no existe.");
-    if (product.stock <= 0) throw new Error(`El producto ${product.nombre} está agotado.`);
-
-    const existing = carritoLocal.find((item) => item.id === product.id);
-
-    if (existing) {
-      if (existing.cantidad >= product.stock) {
-        throw new Error(`Límite alcanzado: No puedes agregar más unidades de ${product.nombre}.`);
-      }
-      existing.cantidad += 1;
-    } else {
-      // Método .push() para insertar objetos en el array
-      carritoLocal.push({ ...product, cantidad: 1 });
-    }
-
-    renderCartVisual();
-  } catch (error) {
-    alert(`⚠️ Módulo Stock: ${error.message}`);
-  }
-}
-
-// REQUISITO MENTOR: Eliminar del carrito mediante posición (.findIndex y .splice)
-function removeFromCart(productId) {
-  const index = carritoLocal.findIndex((item) => item.id === Number(productId));
-  if (index >= 0) {
-    carritoLocal.splice(index, 1);
-  }
-  renderCartVisual();
-}
-
-// REQUISITO MENTOR: Calcular total acumulado usando .reduce()
-function renderCartVisual() {
+function actualizarInterfazCarrito(dataCarrito) {
   cartItems.innerHTML = '';
+  const cart = dataCarrito.items;
 
-  if (carritoLocal.length === 0) {
+  if (cart.length === 0) {
     cartItems.innerHTML = '<p class="empty-state">Tu carrito está vacío.</p>';
     cartCount.textContent = '0 artículos';
     subtotalValue.textContent = formatCurrency(0);
@@ -115,10 +51,7 @@ function renderCartVisual() {
     return;
   }
 
-  // Uso obligatorio del acumulador matemático .reduce()
-  const subtotal = carritoLocal.reduce((acumulador, item) => acumulador + (item.precio * item.cantidad), 0);
-
-  carritoLocal.forEach((item) => {
+  cart.forEach((item) => {
     const row = document.createElement('article');
     row.className = 'cart-item';
     row.innerHTML = `
@@ -131,66 +64,80 @@ function renderCartVisual() {
     cartItems.appendChild(row);
   });
 
-  cartCount.textContent = `${carritoLocal.length} artículo(s)`;
-  subtotalValue.textContent = formatCurrency(subtotal);
-  totalValue.textContent = formatCurrency(subtotal);
+  cartCount.textContent = `${cart.length} artículo(s) En Back`;
+  subtotalValue.textContent = formatCurrency(dataCarrito.total);
+  totalValue.textContent = formatCurrency(dataCarrito.total);
   checkoutBtn.disabled = false;
 }
 
-// ==========================================
-// 3. CONEXIÓN DIRECTA CON TU SERVIDOR (src/app.js)
-// ==========================================
-async function cargarInventarioDelBackend() {
+async function cargarApp() {
+  const resInventario = await fetch('/api/inventario');
+  productosDelServidor = await resInventario.json();
+  renderProducts(productosDelServidor);
+
+  const resCarrito = await fetch('/api/carrito');
+  const dataCarrito = await resCarrito.json();
+  actualizarInterfazCarrito(dataCarrito);
+  countLabel.textContent = `${productosDelServidor.length} productos sincronizados con Back`;
+
+  const bodegaRopa = metadataCategorias.get("Ropa");
+  console.log("🚚 Verificación de Bodega (Map .get):", bodegaRopa.ubicacionBodega);
+}
+
+// DISPARAR TU FUNCIÓN agregarAlCarrito() EN EL BACK
+async function clickAgregar(productId) {
   try {
-    // Hace la petición http real a la ruta '/api/inventario' que tú programaste en tu app.js
-    const response = await fetch('/api/inventario'); 
-    
-    if (!response.ok) throw new Error("No se pudo obtener la respuesta del servidor.");
-    
-    // Almacenamos los objetos que envía tu backend en nuestra variable del frontend
-    productosDelServidor = await response.json(); 
-    
-    // Pintamos las tarjetas con tus datos reales
-    renderProducts(productosDelServidor);
-    countLabel.textContent = `${productosDelServidor.length} productos disponibles`;
-    renderCartVisual();
+    const response = await fetch('/api/carrito/agregar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idProducto: productId })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      actualizarInterfazCarrito(data);
+    } else {
+      // Muestra el mensaje de stock exacto configurado en tu servicio del backend
+      alert(`⚠️ Control de Inventario: ${data.error}`);
+    }
   } catch (error) {
-    countLabel.textContent = "Error de conexión con el backend.";
-    console.error("Fallo al cargar tu API:", error);
+    console.error("Fallo de red en la petición:", error);
+    alert("⚠️ Error crítico de comunicación con el servidor.");
   }
 }
 
-// ==========================================
-// 4. CONTROLADORES DE EVENTOS (LISTENERS)
-// ==========================================
+// DISPARAR TU FUNCIÓN eliminarDelCarrito() EN EL BACK
+async function clickQuitar(productId) {
+  const response = await fetch('/api/carrito/eliminar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idProducto: productId })
+  });
+  const data = await response.json();
+  actualizarInterfazCarrito(data);
+}
 
-// Clics en el catálogo
-productGrid.addEventListener('click', (event) => {
-  const button = event.target.closest('button[data-id]');
-  if (!button) return;
-  addToCart(button.dataset.id);
-});
-
-// Clics en el carrito
-cartItems.addEventListener('click', (event) => {
-  const button = event.target.closest('button[data-id]');
-  if (!button) return;
-  removeFromCart(button.dataset.id);
-});
-
-// Evento del Buscador
 if (inputBuscar) {
   inputBuscar.addEventListener('input', (e) => {
-    const filtrados = filtrarProductos(e.target.value);
+    const criterio = e.target.value.toLowerCase();
+    const filtrados = productosDelServidor.filter(p =>
+      p.nombre.toLowerCase().includes(criterio) ||
+      p.categoria.toLowerCase().includes(criterio) ||
+      p.precio.toString().includes(criterio)
+    );
     renderProducts(filtrados);
   });
 }
 
-// Finalizar orden
-checkoutBtn.addEventListener('click', () => {
-  const totalFinal = carritoLocal.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
-  alert(`🛒 Compra procesada de forma exitosa por un total de: ${formatCurrency(totalFinal)}.`);
+productGrid.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-id]');
+  if (btn) clickAgregar(btn.dataset.id);
 });
 
-// Disparar la petición a tu backend apenas abra la página
-cargarInventarioDelBackend();
+cartItems.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-id]');
+  if (btn) clickQuitar(btn.dataset.id);
+});
+
+cargarApp();
